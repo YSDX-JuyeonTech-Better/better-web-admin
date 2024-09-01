@@ -8,6 +8,8 @@ import { NextResponse } from "next/server";
  * @swagger
  * /api/products:
  *   get:
+ *     tags:
+ *       - Products
  *     summary: Retrieve a list of products with optional filtering and pagination
  *     description: Retrieve a list of products from the database. Allows filtering by name, brand, category, status, and price range, with pagination support.
  *     parameters:
@@ -271,6 +273,8 @@ export async function GET(request: any) {
  * @swagger
  * /api/products:
  *   post:
+ *     tags:
+ *       - Products
  *     summary: Create a new product with associated colors
  *     description: Inserts a new product into the database along with its associated colors.
  *     requestBody:
