@@ -4,6 +4,154 @@ import { Product } from "@/lib/products/types";
 import { RowDataPacket } from "mysql2";
 import { NextResponse } from "next/server";
 
+/**
+ * @swagger
+ * /api/products:
+ *   get:
+ *     summary: Retrieve a list of products with optional filtering and pagination
+ *     description: Retrieve a list of products from the database. Allows filtering by name, brand, category, status, and price range, with pagination support.
+ *     parameters:
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Filter products by name (partial match)
+ *       - in: query
+ *         name: brand
+ *         schema:
+ *           type: string
+ *         description: Filter products by brand (partial match)
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: Filter products by category
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [available, out_of_stock, discontinued]
+ *         description: Filter products by status
+ *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: integer
+ *           minimum: 0
+ *         description: Filter products with a minimum price (inclusive)
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: integer
+ *           minimum: 0
+ *         description: Filter products with a maximum price (inclusive)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *           minimum: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *           minimum: 1
+ *         description: Number of items per page
+ *     responses:
+ *       200:
+ *         description: A list of products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       name:
+ *                         type: string
+ *                         example: "iPhone 12"
+ *                       brand:
+ *                         type: string
+ *                         example: "Apple"
+ *                       price:
+ *                         type: integer
+ *                         example: 799
+ *                       description:
+ *                         type: string
+ *                         example: "The latest iPhone model with improved performance."
+ *                       category:
+ *                         type: string
+ *                         example: "electronics"
+ *                       image_link:
+ *                         type: string
+ *                         example: "http://example.com/images/iphone12.jpg"
+ *                       stock:
+ *                         type: integer
+ *                         example: 50
+ *                       status:
+ *                         type: string
+ *                         example: "available"
+ *                       created_at:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2023-08-25T12:34:56Z"
+ *                       updated_at:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2023-08-26T12:34:56Z"
+ *                 page:
+ *                   type: integer
+ *                   example: 1
+ *                 pageSize:
+ *                   type: integer
+ *                   example: 10
+ *                 totalPages:
+ *                   type: integer
+ *                   example: 5
+ *                 total:
+ *                   type: integer
+ *                   example: 50
+ *       400:
+ *         description: Invalid request parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Invalid request parameters"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Database query failed"
+ *                 details:
+ *                   type: string
+ *                   example: "Error message details"
+ */
+
 // 전체 상품 리스트 조회(GET) - 페이지네이션 추가
 // 유연성을 위해 request 타입을 any로 지정. 추후 변경 필요
 export async function GET(request: any) {
@@ -118,6 +266,98 @@ export async function GET(request: any) {
     }
   }
 }
+
+/**
+ * @swagger
+ * /api/products:
+ *   post:
+ *     summary: Create a new product with associated colors
+ *     description: Inserts a new product into the database along with its associated colors.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: Example Product
+ *               brand:
+ *                 type: string
+ *                 example: Example Brand
+ *               price:
+ *                 type: number
+ *                 example: 100
+ *               category:
+ *                 type: string
+ *                 example: Example Category
+ *               description:
+ *                 type: string
+ *                 example: This is an example product.
+ *               image_link:
+ *                 type: string
+ *                 example: http://example.com/image.jpg
+ *               stock:
+ *                 type: number
+ *                 example: 10
+ *               status:
+ *                 type: string
+ *                 enum: [available, out_of_stock, discontinued]
+ *                 example: available
+ *               created_at:
+ *                 type: string
+ *                 format: date-time
+ *                 example: 2024-01-01T00:00:00Z
+ *               updated_at:
+ *                 type: string
+ *                 format: date-time
+ *                 example: 2024-01-01T00:00:00Z
+ *               product_colors:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     hex_value:
+ *                       type: string
+ *                       example: #FFFFFF
+ *                     color_name:
+ *                       type: string
+ *                       example: White
+ *     responses:
+ *       '201':
+ *         description: Successfully created a new product with associated colors
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Product and colors inserted successfully
+ *                 productId:
+ *                   type: integer
+ *                   example: 123
+ *       '500':
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: Database insertion failed
+ *                 details:
+ *                   type: string
+ *                   example: Error message here
+ */
 
 // 상품 등록(POST)
 export async function POST(request: any) {

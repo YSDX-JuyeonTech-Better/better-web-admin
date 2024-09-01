@@ -2,6 +2,99 @@ import pool from "@/lib/db";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import { NextResponse } from "next/server";
 
+/**
+ * @swagger
+ * /api/products/{id}:
+ *   get:
+ *     summary: Get product by ID
+ *     description: Retrieve details of a specific product by its ID.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the product to retrieve.
+ *     responses:
+ *       '200':
+ *         description: Successfully retrieved product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     name:
+ *                       type: string
+ *                       example: Product Name
+ *                     brand:
+ *                       type: string
+ *                       example: Brand Name
+ *                     price:
+ *                       type: number
+ *                       example: 100.00
+ *                     category:
+ *                       type: string
+ *                       example: Category Name
+ *                     description:
+ *                       type: string
+ *                       example: This is a product description.
+ *                     image_link:
+ *                       type: string
+ *                       example: http://example.com/image.jpg
+ *                     stock:
+ *                       type: integer
+ *                       example: 50
+ *                     status:
+ *                       type: string
+ *                       example: available
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2024-01-01T12:00:00Z
+ *                     updated_at:
+ *                       type: string
+ *                       format: date-time
+ *                       example: 2024-01-01T12:00:00Z
+ *       '404':
+ *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: Product not found
+ *       '500':
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: Database query failed
+ *                 details:
+ *                   type: string
+ *                   example: Error message here
+ */
+
 // id값으로 상품의 전체 정보 조회(GET)
 export async function GET(
   // 유연성을 위해 any 타입 사용. 추후 NextRequest로 변경
@@ -43,6 +136,95 @@ export async function GET(
     }
   }
 }
+
+/**
+ * @swagger
+ * /api/products/{id}:
+ *   put:
+ *     summary: Update product by ID
+ *     description: Update details of a specific product by its ID.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the product to update.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: Updated Product Name
+ *               brand:
+ *                 type: string
+ *                 example: Updated Brand Name
+ *               price:
+ *                 type: number
+ *                 example: 150.00
+ *               category:
+ *                 type: string
+ *                 example: Updated Category Name
+ *               description:
+ *                 type: string
+ *                 example: This is an updated product description.
+ *               image_link:
+ *                 type: string
+ *                 example: http://example.com/updated-image.jpg
+ *               stock:
+ *                 type: integer
+ *                 example: 100
+ *               status:
+ *                 type: string
+ *                 example: out_of_stock
+ *     responses:
+ *       '200':
+ *         description: Successfully updated product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Product updated successfully
+ *       '404':
+ *         description: Product not found or no changes made
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: Product not found or no changes made
+ *       '500':
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: Database update failed
+ *                 details:
+ *                   type: string
+ *                   example: Error message here
+ */
 
 // id값으로 상품 정보 수정(PUT)
 export async function PUT(
@@ -99,6 +281,64 @@ export async function PUT(
     }
   }
 }
+
+/**
+ * @swagger
+ * /api/products/{id}:
+ *   delete:
+ *     summary: Delete product by ID
+ *     description: Delete a specific product by its ID.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the product to delete.
+ *     responses:
+ *       '200':
+ *         description: Successfully deleted product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Product deleted successfully
+ *       '404':
+ *         description: Product not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: Product not found
+ *       '500':
+ *         description: Internal Server Error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: Database deletion failed
+ *                 details:
+ *                   type: string
+ *                   example: Error message here
+ */
 
 // id값으로 상품 삭제(DELETE)
 export async function DELETE(
