@@ -13,6 +13,10 @@ interface Item {
   category: string;
   description: string;
 }
+const deleteOrder = async (order_no: any) => {
+  //await fetch(`http://localhost:3000/api/products/delete?order_no=${order_no}`);
+  await fetch(`http://localhost:4000/api/products/delete?order_no=${order_no}`);
+};
 
 const Home: React.FC = () => {
   const { itemId } = useParams<{ itemId: string }>();
@@ -23,28 +27,30 @@ const Home: React.FC = () => {
       await axios
         .get(`/api/products/${itemId}`)
         .then((response) => {
-          const item = response.data;
-          if (item.image_link && item.image_link.startsWith("//")) {
+          const item = response.data.data;
+
+          console.log(item.image_link);
+          if (item.image_link != null) {
             item.image_link = `https:${item.image_link}`;
             console.log(item.image_link);
           }
-          setItems(item.data);
+          setItems(item);
         })
         .catch((error) => console.log(error));
     } catch (error) {
-      console.error("Error fetching items:", error);
+      console.error("Error fetching orders:", error);
     }
   };
 
-  // useEffect(() => {
-  //   fetchItems();
-  // }, []);
-
   useEffect(() => {
-    if (itemId) {
-      fetchItems(); // itemId가 있을 때만 데이터를 가져옴
-    }
-  }, [itemId]);
+    fetchItems();
+  }, []);
+
+  // useEffect(() => {
+  //   if (itemId) {
+  //     fetchItems(); // itemId가 있을 때만 데이터를 가져옴
+  //   }
+  // }, [itemId]);
 
   return (
     <main className="container flex flex-col p-6 bg-gray-100 min-h-screen w-auto">
@@ -102,7 +108,7 @@ const Home: React.FC = () => {
                 </label>
                 <textarea
                   className="mt-1 block w-96 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  rows={4}
+                  rows={9}
                   value={items.description}
                   readOnly
                 />
@@ -133,6 +139,28 @@ const Home: React.FC = () => {
         >
           목록
         </a>
+        <a
+          href="/item/regist"
+          className="bg-gray-700 text-white py-2 px-4 mx-2 rounded-lg hover:bg-gray-600 font-light"
+          style={{
+            minWidth: "60px",
+            textAlign: "center",
+            whiteSpace: "nowrap",
+          }}
+        >
+          수정
+        </a>
+        <button
+          className="bg-gray-700 text-white py-2 px-4 mx-2 rounded-lg hover:bg-gray-600 font-light"
+          style={{
+            minWidth: "60px",
+            textAlign: "center",
+            whiteSpace: "nowrap",
+          }}
+          onClick={() => deleteOrder(items.id)}
+        >
+          삭제
+        </button>
       </div>
     </main>
   );

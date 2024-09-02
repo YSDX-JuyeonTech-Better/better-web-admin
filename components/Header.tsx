@@ -46,7 +46,7 @@ const Header = () => {
             관리자▼
           </span>
           <span className=" lg:grid place-items-center text-sm font-semibold px-3 mt-2.5 text-gray-300 tracking-wider">
-            로그아웃 | 비밀번호변경
+            로그아웃
           </span>
         </div>
       </div>
@@ -69,7 +69,7 @@ const Header = () => {
       {/* 메뉴표시 */}
       <div
         className={clsx("overflow-y-auto lg:block lg:static", {
-          "fixed inset-x-0 bottom-0 top-20 bg-gray-800": isOpen,
+          "fixed inset-x-0 bottom-0 top-28 bg-gray-800": isOpen,
           hidden: !isOpen,
         })}
       >

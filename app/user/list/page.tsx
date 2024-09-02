@@ -1,98 +1,149 @@
 "use client";
-import React, { useState } from "react";
+import axios from "axios";
+import Image from "next/image";
+import Link from "next/link";
+import { useState, useEffect } from "react";
 
-// 가짜 데이터 생성
-const fakeOrders = Array.from({ length: 36 }, (_, index) => ({
-  id: index + 1,
-  date: "2024-08-08 12:34:56",
-  userName: `회원 ${index + 1}`,
-  userId: `P1234567${index + 1}`,
-  level: index % 3 === 0 ? "4" : index % 3 === 1 ? "3" : "1",
-  amount: `₩${(index + 1) * 1000}`,
-  point: `₩${(index + 1) * 10}`,
-  mail: index % 3 === 0 ? "수신" : index % 3 === 1 ? "거부" : "수신",
-}));
+const ITEMS_PER_PAGE: number = 5; // 페이지당 출력할 항목 수
+const PAGES_PER_GROUP: number = 5; // 그룹당 페이지 수
 
-const ITEMS_PER_PAGE = 5; // 페이지당 출력할 항목 수
+interface userProps {
+  no: number;
+  date: string;
+  userName: string;
+  userId: string;
+  admin: string;
+  amount: number;
+  point: number;
+  state: string;
+}
 
 const Home = () => {
-  const [levelType, setLevelType] = useState("");
-  const [mailType, setMailType] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [userId, setUserId] = useState("");
+  const [userName, setUserName] = useState("");
+  const [adminType, setAdminType] = useState("");
+  const [statusType, setStatusType] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [users, setUsers] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const handleFilter = () => {
-    // 필터링 로직을 추가하세요
-    console.log("Filtering orders with:", { levelType, startDate, endDate });
+  const fetchUsers = async (page_no: number) => {
+    try {
+      const params = {
+        page: page_no,
+        pageSize: ITEMS_PER_PAGE,
+        userId,
+        userName,
+        adminType,
+        statusType,
+      };
+      const response = await axios.get("api/users", { params });
+      const user = response.data;
+      setUsers(user.data);
+      console.log(user.data);
+      console.log(users.length);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  // 현재 페이지에 표시할 항목들
-  const currentOrders = fakeOrders.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  useEffect(() => {
+    fetchUsers(1);
 
-  // 페이지 수 계산
-  const totalPages = Math.ceil(fakeOrders.length / ITEMS_PER_PAGE);
+    const fetchData = async () => {
+      try {
+        const response = await axios.get("/api/users");
+        const data = response.data;
+        const totalPage = Math.ceil(data.total / ITEMS_PER_PAGE);
+        setTotalPages(totalPage);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const currentGroup = Math.ceil(currentPage / PAGES_PER_GROUP);
+  const startPage = (currentGroup - 1) * PAGES_PER_GROUP + 1;
+  const endPage = Math.min(startPage + PAGES_PER_GROUP - 1, totalPages);
+
+  const handlePageClick = (pageNo: number) => {
+    setCurrentPage(pageNo);
+    fetchUsers(pageNo);
+  };
+
+  const handleGroupNavigation = (direction: "prev" | "next") => {
+    let newGroupStartPage =
+      direction === "prev"
+        ? startPage - PAGES_PER_GROUP
+        : startPage + PAGES_PER_GROUP;
+    newGroupStartPage = Math.max(newGroupStartPage, 1);
+    const newPage = newGroupStartPage;
+
+    setCurrentPage(newPage);
+    fetchUsers(newPage);
+  };
+
+  const handleFilter = () => {
+    setCurrentPage(1);
+    fetchUsers(1); // 필터링된 데이터를 1페이지부터 다시 가져옴
+  };
 
   return (
     <main className="flex container mx-auto">
       <div>
-        {/* 주문일 등 상세검색 */}
-        <div className="bg-white p-4 mb-4 shadow-md">
-          <div className="mb-4">
-            <label className="block text-gray-700">회원등급:</label>
+        {/* 이름 등 상세검색 */}
+        <div className="bg-gray-100 p-4  mt-24 mb-4 shadow-md mx-auto flex">
+          <div className="mb-4 mx-6">
+            <label className="block text-gray-700">아이디:</label>
+            <input
+              type="text"
+              className="mt-1 block w-full"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+            />
+          </div>
+          <div className="mb-4 mx-6">
+            <label className="block text-gray-700">이름:</label>
+            <input
+              type="text"
+              className="mt-1 block w-full"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+            />
+          </div>
+          <div className="mb-4 mx-6">
+            <label className="block text-gray-700">관리자:</label>
+            <select
+              className="mt-1 block w-full mx-6"
+              value={adminType}
+              onChange={(e) => setAdminType(e.target.value)}
+            >
+              <option value="일반">일반</option>
+              <option value="관리자">관리자</option>
+            </select>
+          </div>
+          <div className="mb-4 mx-6">
+            <label className="block text-gray-700">상태:</label>
             <select
               className="mt-1 block w-full"
-              value={levelType}
-              onChange={(e) => setLevelType(e.target.value)}
+              value={statusType}
+              onChange={(e) => setStatusType(e.target.value)}
             >
-              <option value="all">전체</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
+              <option value="활성">활성</option>
+              <option value="비활성">비활성</option>
             </select>
           </div>
 
-          <div className="mb-4">
-            <label className="block text-gray-700">가입일:</label>
-            <div className="flex space-x-2">
-              <input
-                type="date"
-                className="mt-1 block w-full"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-              <span className="mt-2">~</span>
-              <input
-                type="date"
-                className="mt-1 block w-full"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
-          </div>
           <button
             onClick={handleFilter}
-            className="mt-4 bg-gray-700 text-white py-2 px-4 rounded hover:bg-gray-600"
+            className="mt-4 mx-6 text-sm bg-gray-700 text-white py-2 px-4 rounded-lg block hover:bg-gray-600 border-2 h-11"
           >
-            필터 적용
+            검색
           </button>
-          <div className="mb-4">
-            <label className="block text-gray-700">메일수신:</label>
-            <select
-              className="mt-1 block w-full"
-              value={mailType}
-              onChange={(e) => setMailType(e.target.value)}
-            >
-              <option value="all">전체</option>
-              <option value="accept">수신</option>
-              <option value="reject">거부</option>
-            </select>
-          </div>
         </div>
 
         {/* 주문목록리스트출력 */}
@@ -112,7 +163,7 @@ const Home = () => {
                 아이디
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                회원등급
+                관리자
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 구매금액
@@ -121,33 +172,31 @@ const Home = () => {
                 포인트
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                메일수신여부
+                상태
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {currentOrders.map((order) => (
-              <tr key={order.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <a
-                    href="/user/detail"
-                    className="text-blue-600 hover:text-blue-900"
-                  >
-                    {order.id}
-                  </a>
-                </td>
+            {users &&
+              users.map((user: userProps) => (
+                <tr key={user.no}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-blue-600 hover:text-blue-900">
+                      <Link href={`/user/detail/${user.no}`}>{user.no}</Link>
+                    </span>
+                  </td>
 
-                <td className="px-6 py-4 whitespace-nowrap">{order.date}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {order.userName}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">{order.userId}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{order.level}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{order.amount}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{order.point}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{order.mail}</td>
-              </tr>
-            ))}
+                  <td className="px-6 py-4 whitespace-nowrap">{user.date}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {user.userName}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">{user.userId}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{user.admin}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{user.amount}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{user.point}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{user.state}</td>
+                </tr>
+              ))}
           </tbody>
         </table>
 
@@ -155,26 +204,28 @@ const Home = () => {
         <div className="flex justify-center mt-4">
           <button
             className="px-4 py-2 mx-1 bg-gray-200 rounded"
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
+            onClick={() => handleGroupNavigation("prev")}
+            disabled={startPage === 1}
           >
             이전
           </button>
-          {Array.from({ length: totalPages }, (_, index) => (
+          {Array.from({ length: endPage - startPage + 1 }, (_, index) => (
             <button
-              key={index + 1}
-              className={`px-4 py-2 mx-1 rounded ${currentPage === index + 1 ? "bg-gray-700 text-white" : "bg-gray-200"}`}
-              onClick={() => setCurrentPage(index + 1)}
+              key={startPage + index}
+              className={`px-4 py-2 mx-1 rounded ${
+                currentPage === startPage + index
+                  ? "bg-gray-700 text-white"
+                  : "bg-gray-200"
+              }`}
+              onClick={() => handlePageClick(startPage + index)}
             >
-              {index + 1}
+              {startPage + index}
             </button>
           ))}
           <button
             className="px-4 py-2 mx-1 bg-gray-200 rounded"
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-            disabled={currentPage === totalPages}
+            onClick={() => handleGroupNavigation("next")}
+            disabled={endPage === totalPages}
           >
             다음
           </button>
