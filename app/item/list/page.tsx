@@ -36,16 +36,19 @@ const Home = () => {
 
   const fetchItems = async (page_no: number) => {
     try {
-      const params = {
+      // 기본적으로 빈 필터 값을 제외하기 위해 조건적으로 params 설정
+      const params: any = {
         page: page_no,
         pageSize: ITEMS_PER_PAGE,
-        startPrice,
-        endPrice,
-        productName,
-        brand,
-        category,
-        status,
       };
+
+      // 빈 값이 아닌 필터 값만 params에 추가
+      if (startPrice) params.startPrice = startPrice;
+      if (endPrice) params.endPrice = endPrice;
+      if (productName) params.productName = productName;
+      if (brand) params.brand = brand;
+      if (category) params.category = category;
+      if (status) params.status = status;
 
       const response = await axios.get("/api/products", { params });
       const item = response.data;
@@ -102,7 +105,7 @@ const Home = () => {
 
   return (
     <main className="container flex mx-auto">
-      <div className="bg-gray-100 p-4  mt-24 mb-4 shadow-md mx-auto flex">
+      <div className="w-full max-w-4xl">
         <div className="mt-6 text-right pb-7">
           <a
             href="/item/regist"
@@ -181,7 +184,7 @@ const Home = () => {
 
           <button
             onClick={handleFilter}
-            className="mt-4 mx-6 text-sm bg-gray-700 text-white py-2 px-4 rounded-lg block hover:bg-gray-600 border-2 h-11"
+            className="mt-4 mx-6 text-sm bg-gray-700 text-white py-2 px-4 rounded-lg w-32 text-center flex items-center justify-center hover:bg-gray-600 border-2 h-11"
           >
             검색
           </button>

@@ -31,15 +31,19 @@ const Home = () => {
 
   const fetchUsers = async (page_no: number) => {
     try {
-      const params = {
+      // 기본적으로 빈 필터 값을 제외하기 위해 조건적으로 params 설정
+      const params: any = {
         page: page_no,
         pageSize: ITEMS_PER_PAGE,
-        userId,
-        userName,
-        adminType,
-        statusType,
       };
-      const response = await axios.get("api/users", { params });
+
+      // 빈 값이 아닌 필터 값만 params에 추가
+      if (userId) params.userId = userId;
+      if (userName) params.userName = userName;
+      if (adminType) params.adminType = adminType;
+      if (statusType) params.statusType = statusType;
+
+      const response = await axios.get("/users", { params });
       const user = response.data;
       setUsers(user.data);
       console.log(user.data);
@@ -54,7 +58,7 @@ const Home = () => {
 
     const fetchData = async () => {
       try {
-        const response = await axios.get("/api/users");
+        const response = await axios.get("/users");
         const data = response.data;
         const totalPage = Math.ceil(data.total / ITEMS_PER_PAGE);
         setTotalPages(totalPage);

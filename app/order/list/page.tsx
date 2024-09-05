@@ -28,14 +28,18 @@ const Home = () => {
 
   const fetchOrders = async (page_no: number) => {
     try {
-      const params = {
+      // 기본적으로 빈 필터 값을 제외하기 위해 조건적으로 params 설정
+      const params: any = {
         page: page_no,
         pageSize: ITEMS_PER_PAGE,
-        startDate,
-        endDate,
-        orderNum,
-        userId,
       };
+
+      // 빈 값이 아닌 필터 값만 params에 추가
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+      if (orderNum) params.orderNum = orderNum;
+      if (userId) params.userId = userId;
+
       const response = await axios.get("/api/orders", { params });
       const order = response.data;
       setOrders(order.data);

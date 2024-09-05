@@ -22,7 +22,7 @@ const Home: React.FC = () => {
   const fetchItems = async () => {
     try {
       await axios
-        .get(`/api/users/${userNo}`)
+        .get(`/users/${userNo}`)
         .then((response) => {
           const user = response.data;
 
