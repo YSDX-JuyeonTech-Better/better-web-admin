@@ -1,4 +1,5 @@
 "use client";
+
 import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
@@ -31,23 +32,21 @@ const Home = () => {
 
   const fetchUsers = async (page_no: number) => {
     try {
-      // 기본적으로 빈 필터 값을 제외하기 위해 조건적으로 params 설정
       const params: any = {
         page: page_no,
         pageSize: ITEMS_PER_PAGE,
       };
 
-      // 빈 값이 아닌 필터 값만 params에 추가
       if (userId) params.userId = userId;
       if (userName) params.userName = userName;
       if (adminType) params.adminType = adminType;
       if (statusType) params.statusType = statusType;
 
-      const response = await axios.get("/users", { params });
+      const response = await axios.get("/api/users", { params });
       const user = response.data;
       setUsers(user.data);
-      console.log(user.data);
-      console.log(users.length);
+      const totalPage = Math.ceil(user.total / ITEMS_PER_PAGE);
+      setTotalPages(totalPage);
     } catch (error) {
       console.error(error);
     }
@@ -55,19 +54,6 @@ const Home = () => {
 
   useEffect(() => {
     fetchUsers(1);
-
-    const fetchData = async () => {
-      try {
-        const response = await axios.get("/users");
-        const data = response.data;
-        const totalPage = Math.ceil(data.total / ITEMS_PER_PAGE);
-        setTotalPages(totalPage);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchData();
   }, []);
 
   const currentGroup = Math.ceil(currentPage / PAGES_PER_GROUP);
@@ -93,7 +79,7 @@ const Home = () => {
 
   const handleFilter = () => {
     setCurrentPage(1);
-    fetchUsers(1); // 필터링된 데이터를 1페이지부터 다시 가져옴
+    fetchUsers(1);
   };
 
   return (

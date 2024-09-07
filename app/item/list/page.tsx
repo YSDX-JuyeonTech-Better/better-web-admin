@@ -24,9 +24,9 @@ interface itemProps {
 }
 
 const Home = () => {
-  const [startPrice, setStartPrice] = useState("");
-  const [endPrice, setEndPrice] = useState("");
-  const [productName, setProductName] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [name, setName] = useState("");
   const [brand, setBrand] = useState("");
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState("");
@@ -36,46 +36,35 @@ const Home = () => {
 
   const fetchItems = async (page_no: number) => {
     try {
-      // 기본적으로 빈 필터 값을 제외하기 위해 조건적으로 params 설정
       const params: any = {
         page: page_no,
         pageSize: ITEMS_PER_PAGE,
       };
 
-      // 빈 값이 아닌 필터 값만 params에 추가
-      if (startPrice) params.startPrice = startPrice;
-      if (endPrice) params.endPrice = endPrice;
-      if (productName) params.productName = productName;
+      if (minPrice) params.minPrice = minPrice;
+      if (maxPrice) params.maxPrice = maxPrice;
+      if (name) params.name = name;
       if (brand) params.brand = brand;
       if (category) params.category = category;
       if (status) params.status = status;
 
       const response = await axios.get("/api/products", { params });
+      console.log(response);
       const item = response.data;
-      setItems(item.data);
+
+      setItems(item.data); // 업데이트된 items를 setItems로 저장
+      const totalPage = Math.ceil(item.total / ITEMS_PER_PAGE);
+      setTotalPages(totalPage);
       console.log(item.data);
-      console.log(items.length);
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching items:", error);
     }
   };
 
+  // 페이지 로드 시 처음 데이터를 가져옴
   useEffect(() => {
     fetchItems(1);
-
-    const fetchData = async () => {
-      try {
-        const response = await axios.get("/api/products");
-        const data = response.data;
-        const totalPage = Math.ceil(data.total / ITEMS_PER_PAGE);
-        setTotalPages(totalPage);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchData();
-  }, []);
+  }, []); // 의존성 배열을 빈 배열로 설정하여 처음 로드 시에만 실행
 
   const currentGroup = Math.ceil(currentPage / PAGES_PER_GROUP);
   const startPage = (currentGroup - 1) * PAGES_PER_GROUP + 1;
@@ -100,12 +89,13 @@ const Home = () => {
 
   const handleFilter = () => {
     setCurrentPage(1);
+    console.log("필터");
     fetchItems(1); // 필터링된 데이터를 1페이지부터 다시 가져옴
   };
 
   return (
-    <main className="container flex mx-auto">
-      <div className="w-full max-w-4xl">
+    <main className="container flex mx-auto ">
+      <div className="w-full max-w-4xl ">
         <div className="mt-6 text-right pb-7">
           <a
             href="/item/regist"
@@ -124,16 +114,16 @@ const Home = () => {
                 type="number"
                 placeholder="최소 가격"
                 className="mt-1 block w-full"
-                value={startPrice}
-                onChange={(e) => setStartPrice(e.target.value)}
+                value={minPrice}
+                onChange={(e) => setMinPrice(e.target.value)}
               />
               <span className="mt-2">~</span>
               <input
                 type="number"
                 placeholder="최대 가격"
                 className="mt-1 block w-full"
-                value={endPrice}
-                onChange={(e) => setEndPrice(e.target.value)}
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
               />
             </div>
           </div>
@@ -143,8 +133,8 @@ const Home = () => {
             <input
               type="text"
               className="mt-1 block w-full"
-              value={productName}
-              onChange={(e) => setProductName(e.target.value)}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
 
@@ -197,9 +187,7 @@ const Home = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 NO.
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                이미지
-              </th>
+
               <th
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 style={{ maxWidth: "200px" }}
@@ -236,14 +224,7 @@ const Home = () => {
                         <Link href={`/item/detail/${item.id}`}>{item.id}</Link>
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Image
-                        src={`https:${item.image_link}`}
-                        width={100}
-                        height={100}
-                        alt="img"
-                      />
-                    </td>
+
                     <td
                       className="px-6 py-4 overflow-hidden text-ellipsis whitespace-nowrap"
                       style={{ maxWidth: "200px" }}
