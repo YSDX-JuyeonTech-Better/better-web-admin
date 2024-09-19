@@ -1,53 +1,59 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import axios from "axios";
 
-const Home: React.FC = () => {
-  const [productName, setProductName] = useState("");
-  const [brand, setBrand] = useState("");
-  const [price, setPrice] = useState(0);
-  const [colorName, setColorName] = useState("");
-  const [stock, setStock] = useState(0);
-  const [tags, setTags] = useState("");
-  const [category, setCategory] = useState("");
-  const [description, setDescription] = useState("");
-  const [imageLink, setImageLink] = useState("");
-  const [status, setStatus] = useState("");
+interface Item {
+  id: number;
+  name: string;
+  brand: string;
+  price: number;
+  image_link?: string;
+  stock: number;
+  category: string;
+  description: string;
+  status: string;
+}
 
-  const handleSubmit = async () => {
-    const currentTime = new Date().toISOString(); // 현재 시간 ISO 형식
-    const data = {
-      name: productName,
-      brand: brand,
-      price: price,
-      category: category,
-      description: description,
-      image_link: imageLink,
-      stock: stock,
-      status: status,
-      created_at: currentTime,
-      updated_at: currentTime,
-      product_colors: [
-        {
-          hex_value: null, // hex_value가 null이라고 가정
-          color_name: colorName,
-        },
-      ],
+const Home: React.FC = () => {
+  const { itemId } = useParams(); // useParams로 itemId 구조 분해 할당
+  const [items, setItems] = useState<Item | null>(null); // 단일 객체
+
+  // 상품 정보를 가져오는 함수
+  useEffect(() => {
+    const fetchItem = async () => {
+      try {
+        const response = await axios.get(`/api/products/${itemId}`);
+        const item = response.data.data;
+        setItems(item);
+      } catch (error) {
+        console.error("Error fetching item:", error);
+      }
     };
 
-    // 서버에 보내기 전에 콘솔에 출력
-    console.log("서버로 전송할 데이터 스키마:", data);
+    if (itemId) {
+      fetchItem();
+    }
+  }, [itemId]);
 
+  // 상품 정보를 서버에 업데이트하는 함수
+  const handleUpdate = async () => {
     try {
-      const response = await axios.post("/api/products", data);
-      if (response.status === 200 || response.status === 201) {
-        alert("상품이 성공적으로 등록되었습니다.");
-      } else {
-        alert("상품 등록에 실패했습니다.");
-      }
+      await axios.put(`/api/products/${itemId}`, {
+        name: items?.name,
+        brand: items?.brand,
+        price: items?.price,
+        stock: items?.stock,
+        category: items?.category,
+        description: items?.description,
+        image_link: items?.image_link,
+        status: items?.status,
+      });
+
+      alert("상품이 성공적으로 업데이트되었습니다.");
     } catch (error) {
-      console.error("Error registering product:", error);
-      alert("상품 등록 중 오류가 발생했습니다.");
+      console.error("Error updating product:", error);
+      alert("상품 업데이트 중 오류가 발생했습니다.");
     }
   };
 
@@ -58,7 +64,7 @@ const Home: React.FC = () => {
         {/* 왼쪽 영역: 나머지 입력 칸 */}
         <div className="lg:w-1/2 p-6">
           <h2 className="text-2xl font-semibold mb-6 text-center">
-            상품 정보 입력
+            상품 정보 수정
           </h2>
           <div className="gcontainer flex flex-col place-items-center">
             {/* 상품명 */}
@@ -70,8 +76,12 @@ const Home: React.FC = () => {
                 type="text"
                 className="mt-1 block w-96 border-b-2 text-center"
                 placeholder="상품명을 입력하세요"
-                value={productName}
-                onChange={(e) => setProductName(e.target.value)}
+                value={items?.name || ""}
+                onChange={(e) =>
+                  setItems((prev) =>
+                    prev ? { ...prev, name: e.target.value } : null
+                  )
+                }
               />
             </div>
 
@@ -84,8 +94,12 @@ const Home: React.FC = () => {
                 type="text"
                 className="mt-1 block w-96 border-b-2 text-center"
                 placeholder="브랜드명을 입력하세요"
-                value={brand}
-                onChange={(e) => setBrand(e.target.value)}
+                value={items?.brand || ""}
+                onChange={(e) =>
+                  setItems((prev) =>
+                    prev ? { ...prev, brand: e.target.value } : null
+                  )
+                }
               />
             </div>
 
@@ -98,23 +112,12 @@ const Home: React.FC = () => {
                 type="number"
                 className="mt-1 block w-96 border-b-2 text-center"
                 placeholder="가격을 입력하세요"
-                value={price}
-                onChange={(e) => setPrice(Number(e.target.value))}
-              />
-            </div>
-
-            {/* 색상 */}
-            {/* 색상 이름 입력란 */}
-            <div className="pb-4">
-              <label className="block text-base font-bold text-gray-700 mb-1 text-left">
-                색상 이름
-              </label>
-              <input
-                type="text"
-                className="mt-1 block w-96 border-b-2 text-center"
-                placeholder="색상 이름을 입력하세요"
-                value={colorName}
-                onChange={(e) => setColorName(e.target.value)}
+                value={items?.price || 0}
+                onChange={(e) =>
+                  setItems((prev) =>
+                    prev ? { ...prev, price: Number(e.target.value) } : null
+                  )
+                }
               />
             </div>
 
@@ -127,22 +130,12 @@ const Home: React.FC = () => {
                 type="number"
                 className="mt-1 block w-96 border-b-2 text-center"
                 placeholder="재고 수량을 입력하세요"
-                value={stock}
-                onChange={(e) => setStock(Number(e.target.value))}
-              />
-            </div>
-
-            {/* 태그 */}
-            <div className="pb-4">
-              <label className="block text-base font-bold text-gray-700 mb-1 text-left">
-                태그
-              </label>
-              <input
-                type="text"
-                className="mt-1 block w-96 border-b-2 text-center"
-                placeholder="태그를 입력하세요"
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
+                value={items?.stock || 0}
+                onChange={(e) =>
+                  setItems((prev) =>
+                    prev ? { ...prev, stock: Number(e.target.value) } : null
+                  )
+                }
               />
             </div>
 
@@ -153,10 +146,13 @@ const Home: React.FC = () => {
               </label>
               <select
                 className="mt-1 block w-96 border-b-2 text-center"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                value={items?.category || ""}
+                onChange={(e) =>
+                  setItems((prev) =>
+                    prev ? { ...prev, category: e.target.value } : null
+                  )
+                }
               >
-                <option value="">카테고리를 선택하세요</option>
                 <option value="Blush">Blush</option>
                 <option value="Bronzer">Bronzer</option>
                 <option value="Eyebrow">Eyebrow</option>
@@ -177,10 +173,13 @@ const Home: React.FC = () => {
               </label>
               <select
                 className="mt-1 block w-96 border-b-2 text-center"
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
+                value={items?.status || ""}
+                onChange={(e) =>
+                  setItems((prev) =>
+                    prev ? { ...prev, status: e.target.value } : null
+                  )
+                }
               >
-                <option value="">상태를 선택하세요</option>
                 <option value="available">판매중</option>
                 <option value="out_of_stock">재고없음</option>
                 <option value="discount">할인</option>
@@ -201,8 +200,12 @@ const Home: React.FC = () => {
                 type="text"
                 className="mt-1 block w-96 border-b-2 text-center"
                 placeholder="이미지 경로를 입력하세요"
-                value={imageLink}
-                onChange={(e) => setImageLink(e.target.value)}
+                value={items?.image_link || ""}
+                onChange={(e) =>
+                  setItems((prev) =>
+                    prev ? { ...prev, image_link: e.target.value } : null
+                  )
+                }
               />
             </div>
 
@@ -215,34 +218,25 @@ const Home: React.FC = () => {
                 className="mt-1 block w-96 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 rows={9}
                 placeholder="상품 설명을 입력하세요"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                value={items?.description || ""}
+                onChange={(e) =>
+                  setItems((prev) =>
+                    prev ? { ...prev, description: e.target.value } : null
+                  )
+                }
               />
             </div>
-
-            {/* 이미지 미리보기 */}
-            {imageLink && (
-              <div className="flex justify-center">
-                <img
-                  src={imageLink}
-                  alt="Product Image"
-                  width={200}
-                  height={200}
-                  className="object-cover rounded-lg"
-                />
-              </div>
-            )}
           </div>
         </div>
       </div>
 
-      {/* 등록 버튼 */}
+      {/* 업데이트 버튼 */}
       <div className="mt-6 text-center">
         <button
+          onClick={handleUpdate}
           className="bg-gray-700 text-white py-2 px-4 rounded-lg hover:bg-gray-600"
-          onClick={handleSubmit}
         >
-          등록
+          업데이트
         </button>
       </div>
     </main>

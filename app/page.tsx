@@ -1,122 +1,239 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import axios from "axios";
+import BarChart from "@/components/Barchart";
+import DoughnutChart from "@/components/DoughnutChart";
+import React, { useEffect, useState } from "react";
+
+// 인터페이스 정의
+interface ChartData {
+  labels: string[];
+  datasets: {
+    label: string;
+    data: number[];
+    backgroundColor: string[];
+    hoverBackgroundColor: string[];
+  }[];
+}
+
+interface Order {
+  id: number;
+  user_idx: number;
+  total_amount: number;
+  order_date: string;
+}
+
+const COMPONENT: number = 5; // 페이지당 출력할 항목 수
+
+const Dashboard: React.FC = () => {
+  const [barChart7Data, setBarChart7Data] = useState<ChartData>({
+    labels: [],
+    datasets: [],
+  });
+  const [categoryDoughnutData, setCategoryDoughnutData] = useState<ChartData>({
+    labels: [],
+    datasets: [],
+  });
+  const [totalBarChartData, setTotalBarChartData] = useState<ChartData>({
+    labels: [],
+    datasets: [],
+  });
+  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+
+  useEffect(() => {
+    // 최근 7일간 매출액 데이터 가져오기
+    const fetchBarChart7Data = async () => {
+      try {
+        const response = await axios.get("/api/dashboard/recent-sales");
+        const data = response.data.data;
+
+        // 날짜 및 매출 데이터 매핑
+        setBarChart7Data({
+          labels: data.map((item: any) => {
+            // 1. recent_date를 Date 객체로 변환
+            const date = new Date(item.recent_date);
+
+            // 2. 9시간을 추가 (KST를 고려한 시간)
+            date.setHours(date.getHours() + 9);
+
+            // 3. 년-월-일 형식으로 변환
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0"); // 월은 0부터 시작하므로 1을 더함
+            const day = String(date.getDate()).padStart(2, "0");
+
+            // 4. YYYY-MM-DD 포맷으로 반환
+            return `${year}-${month}-${day}`;
+          }),
+          datasets: [
+            {
+              label: "매출",
+              data: data.map((item: any) => Number(item.total_sales)), // 매출 추출
+              backgroundColor: Array(data.length).fill(
+                "rgba(75, 192, 192, 0.2)"
+              ),
+              borderColor: Array(data.length).fill("rgba(75, 192, 192, 1)"),
+              hoverBackgroundColor: Array(data.length).fill(
+                "rgba(75, 192, 192, 0.4)"
+              ),
+              borderWidth: 1,
+            },
+          ],
+        });
+      } catch (error) {
+        console.error("Error fetching sales data:", error);
+      }
+    };
+
+    // 카테고리별 판매순위 데이터 가져오기
+    const fetchCategoryDoughnutData = async () => {
+      try {
+        const response = await axios.get(
+          "/api/dashboard/total-sales-by-category"
+        );
+        const data = response.data.data;
+
+        // 카테고리 및 매출 데이터 매핑
+        setCategoryDoughnutData({
+          labels: data.map((item: any) => item.category), // 카테고리명 추출
+          datasets: [
+            {
+              label: "판매량",
+              data: data.map((item: any) => Number(item.total_sales)), // 카테고리별 매출 추출
+              backgroundColor: [
+                "#FF6384",
+                "#36A2EB",
+                "#FFCE56",
+                "#4BC0C0",
+                "#FF9F40",
+              ],
+              hoverBackgroundColor: [
+                "#FF6384",
+                "#36A2EB",
+                "#FFCE56",
+                "#4BC0C0",
+                "#FF9F40",
+              ],
+            },
+          ],
+        });
+      } catch (error) {
+        console.error("Error fetching category sales data:", error);
+      }
+    };
+
+    // 총 매출액 데이터 가져오기
+    const fetchTotalBarChartData = async () => {
+      try {
+        const response = await axios.get("/api/dashboard/total-sales");
+        const data = response.data;
+
+        // 총 매출 데이터가 하나일 경우
+        setTotalBarChartData({
+          labels: ["총 매출"], // 단일 데이터에 맞게 라벨 설정
+          datasets: [
+            {
+              label: "총 매출",
+              data: [Number(data.totalSales)], // 매출 값을 배열로 변환하여 제공
+              backgroundColor: ["rgba(75, 192, 192, 0.2)"],
+              borderColor: ["rgba(75, 192, 192, 1)"],
+              hoverBackgroundColor: ["rgba(75, 192, 192, 0.4)"],
+              borderWidth: 1,
+            },
+          ],
+        });
+      } catch (error) {
+        console.error("Error fetching total sales data:", error);
+      }
+    };
+    // 최근 주문 목록 데이터 가져오기
+    const fetchRecentOrders = async () => {
+      try {
+        const response = await axios.get("/api/dashboard/recent-orders");
+        const data = response.data.data;
+        console.log(data);
+        setRecentOrders(data);
+      } catch (error) {
+        console.error("Error fetching recent orders:", error);
+      }
+    };
+
+    fetchBarChart7Data();
+    fetchCategoryDoughnutData();
+    fetchTotalBarChartData();
+    fetchRecentOrders();
+  }, []);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx </code>
-          <br />
-          <a href="/dashboard">대시보드</a>
-          <br />
-          <a href="/order/list">주문관리</a>
-          <br />
-          <a href="/item/list">상품관리</a>
-          <br />
-          <a href="/user/list">회원관리</a>
-          <br />
-          <a href="/login">로그인</a>
-          <br />
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg" //public이 루트폴더
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <main>
+      <div className="container px-4 py-8">
+        <div className="text-2xl font-bold mb-6">Dashboard</div>
+
+        {/* 상단 섹션: 그래프 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white shadow-md rounded-lg p-6">
+            <h2 className="text-lg font-semibold mb-4">일매출현황</h2>
+            <div className="h-48">
+              <BarChart data={barChart7Data} />
+            </div>
+          </div>
+          <div className="bg-white shadow-md rounded-lg p-6">
+            <h2 className="text-lg font-semibold mb-4">카테고리별 판매순위</h2>
+            <div className="h-48">
+              <DoughnutChart data={categoryDoughnutData} />
+            </div>
+          </div>
+          <div className="bg-white shadow-md rounded-lg p-6">
+            <h2 className="text-lg font-semibold mb-4">총 매출액</h2>
+            <div className="h-48">
+              <BarChart data={totalBarChartData} />
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+        {/* 하단 섹션: 최근 주문 목록 테이블 */}
+        <div className="bg-white shadow-md rounded-lg p-6">
+          <h2 className="text-lg font-semibold mb-4">최근 주문 목록</h2>
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+          {/* 테이블을 감싸는 div에 스크롤 추가 */}
+          <div className="overflow-y-auto max-h-80">
+            <table className="min-w-full bg-white">
+              <thead>
+                <tr>
+                  <th className="py-2 px-4 border-b">주문 번호</th>
+                  <th className="py-2 px-4 border-b">고객 ID</th>
+                  <th className="py-2 px-4 border-b">가격</th>
+                  <th className="py-2 px-4 border-b">날짜</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* 여러 개의 주문 데이터를 map()을 사용해 출력 */}
+                {recentOrders.length > 0 ? (
+                  recentOrders.map((order: Order) => (
+                    <tr key={order.id}>
+                      <td className="py-2 px-4 border-b">{order.id}</td>
+                      <td className="py-2 px-4 border-b">{order.user_idx}</td>
+                      <td className="py-2 px-4 border-b">
+                        {(order.total_amount || 20000).toLocaleString()}
+                      </td>
+                      <td className="py-2 px-4 border-b">
+                        {new Date(order.order_date).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="text-center py-4">
+                      주문 내역이 없습니다.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </main>
   );
-}
+};
+
+export default Dashboard;

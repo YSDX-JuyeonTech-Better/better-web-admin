@@ -2,8 +2,8 @@ import { withGluestackUI } from "@gluestack/ui-next-adapter";
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    //domains: ["localhost", "s3.amazonaws.com", "*"],
-    domains: ["localhost", "s3.amazonaws.com"],
+    // 기존 도메인과 함께, image.oliveyoung.co.kr을 추가합니다.
+    domains: ["localhost", "s3.amazonaws.com", "image.oliveyoung.co.kr"],
   },
   async rewrites() {
     return [

@@ -150,12 +150,23 @@ const Home = () => {
 
           <div className="mb-4 mx-6">
             <label className="block text-gray-700">카테고리:</label>
-            <input
-              type="text"
+            <select
               className="mt-1 block w-full"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-            />
+            >
+              <option value="">모든 상태</option>
+              <option value="Blush">Blush</option>
+              <option value="Bronzer">Bronzer</option>
+              <option value="Eyebrow">Eyebrow</option>
+              <option value="Eyeliner">Eyeliner</option>
+              <option value="Eyeshadow">Eyeshadow</option>
+              <option value="Foundation">Foundation</option>
+              <option value="Lip liner">Lip liner</option>
+              <option value="Lipstick">Lipstick</option>
+              <option value="Mascara">Mascara</option>
+              <option value="Nail polish">Nail polish</option>
+            </select>
           </div>
 
           <div className="mb-4 mx-6">

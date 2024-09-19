@@ -1,10 +1,10 @@
-// layout.tsx: 전체 틀 잡아주는역할
+// layout.tsx - 서버 컴포넌트 (metadata 사용)
+
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-//import "./globals.css";
-import Header from "../components/Header";
 
 import "./globals.css";
+import ClientWrapper from "@/components/ClientWrapper";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,11 +20,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body>
-        <div>
-          <Header />
-          <div className="lg:pl-64">{children}</div>
-        </div>
+      <body className={inter.className}>
+        <ClientWrapper>{children}</ClientWrapper>
       </body>
     </html>
   );

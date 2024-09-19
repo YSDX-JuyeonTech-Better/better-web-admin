@@ -1,8 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import axios from "axios";
+import Link from "next/link";
 
 interface Item {
   id: number;
@@ -13,13 +14,24 @@ interface Item {
   category: string;
   description: string;
 }
-const deleteOrder = async (order_no: any) => {
-  //await fetch(`http://localhost:3000/api/products/delete?order_no=${order_no}`);
-  await fetch(`http://localhost:4000/api/products/delete?order_no=${order_no}`);
+const deleteItem = async (item_no: number) => {
+  try {
+    const response = await axios.delete(`/api/products/${item_no}`);
+    if (response.status === 200) {
+      alert("상품이 성공적으로 삭제되었습니다.");
+      window.location.href = "/item/list"; // 삭제 후 목록 페이지로 이동
+    } else {
+      alert("상품 삭제에 실패했습니다.");
+    }
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    alert("상품 삭제 중 오류가 발생했습니다.");
+  }
 };
 
 const Home: React.FC = () => {
   const { itemId } = useParams<{ itemId: string }>();
+  const router = useRouter(); // useRouter 추가
   const [items, setItems] = useState<Item | null>(null); // 단일 객체
 
   const fetchItems = async () => {
@@ -28,12 +40,13 @@ const Home: React.FC = () => {
         .get(`/api/products/${itemId}`)
         .then((response) => {
           const item = response.data.data;
-
+          console.log("item id" + item.id);
           console.log(item.image_link);
-          if (item.image_link != null) {
+          if (item.image_link && !/^https?:\/\//i.test(item.image_link)) {
             item.image_link = `https:${item.image_link}`;
             console.log(item.image_link);
           }
+
           setItems(item);
         })
         .catch((error) => console.log(error));
@@ -139,17 +152,18 @@ const Home: React.FC = () => {
         >
           목록
         </a>
-        <a
-          href="/item/regist"
-          className="bg-gray-700 text-white py-2 px-4 mx-2 rounded-lg hover:bg-gray-600 font-light"
-          style={{
-            minWidth: "60px",
-            textAlign: "center",
-            whiteSpace: "nowrap",
-          }}
-        >
-          수정
-        </a>
+        {items && (
+          <button
+            className="bg-gray-700 text-white py-2 px-4 mx-2 rounded-lg hover:bg-gray-600 font-light"
+            style={{
+              minWidth: "60px",
+              textAlign: "center",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <Link href={`/item/regist/${items.id}`}>수정</Link>
+          </button>
+        )}
         <button
           className="bg-gray-700 text-white py-2 px-4 mx-2 rounded-lg hover:bg-gray-600 font-light"
           style={{
@@ -157,7 +171,7 @@ const Home: React.FC = () => {
             textAlign: "center",
             whiteSpace: "nowrap",
           }}
-          onClick={() => deleteOrder(items.id)}
+          onClick={() => deleteItem(items.id)}
         >
           삭제
         </button>

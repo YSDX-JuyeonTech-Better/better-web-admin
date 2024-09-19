@@ -1,8 +1,10 @@
 "use client";
+
 import Link from "next/link";
 import "../app/globals.css";
 import Image from "next/image";
 import { useState } from "react";
+import { useSession, signOut } from "next-auth/react"; // next-auth 훅 추가
 import { Item, menus } from "@/constants/menu";
 import clsx from "clsx";
 import { CloseIcon, Icon, MenuIcon } from "./ui/icon";
@@ -27,7 +29,12 @@ const GlobalNavItem = ({
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { data: session } = useSession(); // 세션 상태를 가져옴
   const close = () => setIsOpen(false);
+
+  const handleLogout = () => {
+    signOut({ callbackUrl: "/login" }); // 로그아웃 시 /login 페이지로 리다이렉트
+  };
 
   return (
     <div className="fixed top-0 z-50 flex flex-col w-full bg-gray-800 border-b border-gray-500 lg:bottom-0 lg:w-64 lg:border-r lg:border-b-0 lg:z-auto">
@@ -41,13 +48,26 @@ const Header = () => {
           <Image src="/logo_lg.png" alt="logo" width={160} height={75} />
         </Link>
 
-        <div className="items-end ">
-          <span className=" lg:grid place-items-center text-sm font-semibold px-3 mt-2.5 text-gray-300 tracking-wider">
-            관리자▼
-          </span>
-          <span className=" lg:grid place-items-center text-sm font-semibold px-3 mt-2.5 text-gray-300 tracking-wider">
-            로그아웃
-          </span>
+        <div className="items-end">
+          {session ? (
+            <>
+              <span className="lg:grid place-items-center text-sm font-semibold px-3 mt-2.5 text-gray-300 tracking-wider">
+                {session.user?.name} ▼ {/* 로그인된 유저의 이름 표시 */}
+              </span>
+              <span
+                onClick={handleLogout} // 로그아웃 이벤트 핸들러 연결
+                className="lg:grid place-items-center text-sm font-semibold px-3 mt-2.5 text-gray-300 tracking-wider cursor-pointer"
+              >
+                로그아웃
+              </span>
+            </>
+          ) : (
+            <Link href="/login">
+              <span className="lg:grid place-items-center text-sm font-semibold px-3 mt-2.5 text-gray-300 tracking-wider">
+                로그인
+              </span>
+            </Link>
+          )}
         </div>
       </div>
       {/* 메뉴 닫기/열기 버튼 */}
@@ -77,7 +97,7 @@ const Header = () => {
           {menus.map((section) => {
             return (
               <div key={section.name}>
-                <div className="text-lg font-semibold py-3 px-3  text-gray-300 tracking-wider">
+                <div className="text-lg font-semibold py-3 px-3 text-gray-300 tracking-wider">
                   <div>{section.name}</div>
                 </div>
                 <div className="">
@@ -93,4 +113,5 @@ const Header = () => {
     </div>
   );
 };
+
 export default Header;

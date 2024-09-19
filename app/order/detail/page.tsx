@@ -5,27 +5,28 @@ import { useParams } from "next/navigation";
 import axios from "axios";
 
 interface Order {
-  no: number;
-  userName: string;
-  userId: string;
-  phoneNum: string;
-  orderNum: string;
-  date: string;
+  user_id: string;
+  user_name: string;
+
+  phone_num: string;
+  order_id: number;
+  order_date: string;
   orderList: Array<{
-    productName: string;
+    product_name: string;
+    brand: string;
     quantity: number;
     price: number;
     total: number;
   }>;
 }
 const Home: React.FC = () => {
-  const { orderNo } = useParams<{ orderNo: string }>();
+  const { order_id } = useParams<{ order_id: string }>();
   const [orders, setOrders] = useState<Order | null>(null); // 단일 객체
 
   const fetchOrders = async () => {
     try {
       await axios
-        .get(`/api/orders/${orderNo}`)
+        .get(`/api/orders/${order_id}`)
         .then((response) => {
           const order = response.data;
 
@@ -42,10 +43,10 @@ const Home: React.FC = () => {
   // }, []);
 
   useEffect(() => {
-    if (orderNo) {
+    if (order_id) {
       fetchOrders(); // itemId가 있을 때만 데이터를 가져옴
     }
-  }, [orderNo]);
+  }, [order_id]);
 
   return (
     <main className="flex container flex-col mx-8 ">
@@ -61,37 +62,31 @@ const Home: React.FC = () => {
                 <label className="block font-medium text-gray-700">
                   주문 고객:
                 </label>
-                <span className="block mt-1">{orders.userName}</span>
+                <span className="block mt-1">{orders.user_name}</span>
               </div>
               <div>
                 <label className="block font-medium text-gray-700">
                   아이디:
                 </label>
-                <span className="block mt-1">{orders.userId}</span>
+                <span className="block mt-1">{orders.user_id}</span>
               </div>
               <div>
                 <label className="block font-medium text-gray-700">
                   휴대폰 번호:
                 </label>
-                <span className="block mt-1">{orders.phoneNum}</span>
+                <span className="block mt-1">{orders.phone_num}</span>
               </div>
               <div>
                 <label className="block font-medium text-gray-700">
                   주문 번호:
                 </label>
-                <span className="block mt-1">{orders.orderNum}</span>
+                <span className="block mt-1">{orders.order_id}</span>
               </div>
               <div>
                 <label className="block font-medium text-gray-700">
                   주문 일시:
                 </label>
-                <span className="block mt-1">{orders.date}</span>
-              </div>
-              <div>
-                <label className="block font-medium text-gray-700">
-                  택배 번호:
-                </label>
-                <span className="block mt-1">TBA987654321</span>
+                <span className="block mt-1">{orders.order_date}</span>
               </div>
             </div>
           </div>
@@ -136,7 +131,7 @@ const Home: React.FC = () => {
               {orders?.orderList.map((item, index) => (
                 <tr key={index}>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="font-bold px-3">{item.productName}</span>
+                    <span className="font-bold px-3">{item.product_name}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {item.quantity}
